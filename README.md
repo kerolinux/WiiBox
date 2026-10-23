@@ -1,7 +1,6 @@
 # WiiBox — Wii Robotics & Physics Sandbox
 
-Bare-metal C++ homebrew: Box2D rigid-body arena, a differential-drive rover with 5 raycast
-range sensors, and a header-only 5→8→2 MLP driving the wheels. Rendered with GRRLIB.
+WiiBox is a bare-metal C++ homebrew app for the Nintendo Wii that turns the console into a small robotics lab. A differential-drive rover moves through a Box2D physics arena, sensing its surroundings with five raycast distance sensors. A lightweight header-only neural network (5 inputs, 8 hidden neurons, 2 outputs) turns those readings into wheel commands, with no dependencies and no heap allocation. Place a goal flag and the rover plans a route to it, paint your own walls or generate a random maze, drag obstacles around with the Wiimote pointer, or take over manually with the Nunchuk. Everything runs at 60 FPS and is presented in a glossy Wii Sports-inspired interface with a live telemetry menu.
 
 ## Layout
 ```
