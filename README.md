@@ -8,18 +8,34 @@ range sensors, and a header-only 5→8→2 MLP driving the wheels. Rendered with
 WiiBox/
 ├─ Makefile
 ├─ source/
-│  ├─ main.cpp      world, rover, sensors, input, rendering, HUD
+│  ├─ main.cpp      world, rover, sensors, planner, input, rendering, UI
 │  ├─ nn.h          header-only MLP forward pass (no deps, no heap)
 │  └─ weights.h     const weight arrays (hand-designed default; replaceable)
-├─ tools/train_export.py   scikit-learn trainer -> writes source/weights.h
-└─ box2d/           <- you add this (see below)
+├─ tools/
+│  ├─ train_export.py      scikit-learn trainer -> writes source/weights.h
+│  └─ make_nn_diagram.py   draws docs/nn_diagram.svg from weights.h
+├─ docs/nn_diagram.svg
+└─ box2d/           git submodule (Box2D v2.4.1)
 ```
+
+## How it works
+<p align="center"><img src="docs/nn_diagram.svg" alt="WiiBox MLP 5-8-2 neural network and control pipeline" width="820"></p>
+
+Five raycast distances feed a 5→8→2 tanh network whose two outputs become the left and right wheel commands. Those commands are blended with the path planner when a goal is set, passed through a damping/smoothing shaper, and applied as wheel forces in Box2D. The diagram is generated from `source/weights.h` by `tools/make_nn_diagram.py`.
+
+## Demo
+<!-- Replace this line with your video: edit this file on github.com, drag demo.mp4 into the editor, and keep the URL it inserts. -->
+*Demo video coming soon.*
 
 ## Build
 1. Install devkitPro with `wii-dev`, then portlibs: `ppc-freetype ppc-libpng ppc-libjpeg-turbo ppc-bzip2 ppc-zlib`.
-2. Build/install **GRRLIB** (https://github.com/GRRLIB/GRRLIB) so `-lgrrlib` is in `$DEVKITPRO/portlibs/ppc`.
-3. Download **Box2D v2.4.1** and copy its `include/` and `src/` into `WiiBox/box2d/`
-   (so `box2d/include/box2d/box2d.h` and `box2d/src/dynamics/*.cpp` exist). The Makefile compiles it directly.
+2. Build/install **GRRLIB** (https://github.com/GRRLIB/GRRLIB) so `grrlib.h` and `libgrrlib.a` land in `$DEVKITPRO/portlibs/wii` (use `sudo DEVKITPRO=/opt/devkitpro DEVKITPPC=/opt/devkitpro/devkitPPC make install` if you hit a permissions error). The Makefile also links `-lpngu` and the Brotli libraries (`ppc-brotli`) that newer FreeType needs.
+3. Get **Box2D v2.4.1** (a git submodule, pinned to the right version):
+   ```
+   git clone --recursive https://github.com/kerolinux/WiiBox.git
+   # already cloned without --recursive?  git submodule update --init
+   ```
+   The Makefile compiles it directly from `box2d/`.
 4. `make` → `WiiBox.dol`. Copy to `sd:/apps/WiiBox/boot.dol` (or `make run` with wiiload).
 
 If Box2D complains about a missing platform timer, `b2Timer` falls back to a stub on unknown
@@ -28,14 +44,16 @@ platforms; if your version doesn't, wrap its body in `#if 0` — the sandbox nev
 ## Controls
 | Input | Action |
 |---|---|
-| IR pointer | crosshair cursor |
-| **A** (empty space) | spawn box/circle and drag it |
+| IR pointer | hand cursor; hover and press **A** on side-menu buttons |
+| **A** (empty arena) | spawn a crate/ball and drag it |
 | **A** (on a body) | grab and drag (rover included) |
-| **B** + D-pad | manual tank-style override |
-| Nunchuk stick | manual override (any deflection past deadzone) |
+| **B** + D-pad | manual drive override |
+| Nunchuk stick | manual drive override |
+| **1** / **2** | toggle sensor rays / pause |
 | **−** / **+** | clear props / reset rover |
-| **1** | toggle HUD |
-| **HOME** | exit to HBC |
+| **HOME** | exit to the Homebrew Channel |
+
+Side-menu buttons: RESET, PAUSE, RAYS, CLEAR (props), BUILD, ERASE, MAZE, NO WALLS, GOAL, SEEK. Build mode, goals and mazes are described below.
 
 ## Design notes
 - **Physics**: gravity-free top-down world, 60 Hz fixed step (8/3 iterations). Props use linear/angular damping as floor friction.
@@ -43,7 +61,7 @@ platforms; if your version doesn't, wrap its body in `#if 0` — the sandbox nev
 - **Sensors**: 5 `b2World::RayCast` queries, −45°…+45°, 4 m range, nose-mounted, self-hit filtered. NN input = `distance / range` (1 = clear). Ray colors: red < 25 %, orange < 50 %, yellow < 75 %, green otherwise.
 - **Inference**: `nn::forward<5,8,2>` — tanh hidden, tanh output ∈ [−1,1] → left/right wheel speed command (× 3 m/s).
 - **No allocations in the loop**: all bodies are pre-created; spawn = enable pooled body, clear = disable; dragging is velocity-based (no joints); HUD uses a built-in 3×5 bitmap font and a static `snprintf` buffer.
-- **Walls**: edit `kWalls[]` in `main.cpp` (`{cx, cy, halfW, halfH}` in metres); arena size is in `cfg`.
+- **Walls**: the arena border is `kWalls[]` in `main.cpp` (`{cx, cy, halfW, halfH}` in metres, arena size in `cfg`). Everything inside is the paintable 0.5 m grid, including the two starter walls (`loadDefaultWalls()`).
 - **Timing**: `GRRLIB_Render()` blocks on vsync, so NTSC/PAL60 run at a locked 60 FPS with a fixed 1/60 s step. On a 50 Hz PAL output the sim would run slow; use a 60 Hz video mode.
 
 ## Walls, mazes and stuck recovery
