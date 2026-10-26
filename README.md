@@ -34,8 +34,9 @@ Five raycast distances feed a 5→8→2 tanh network whose two outputs become th
 https://github.com/user-attachments/assets/a4abbf5f-8fc1-4136-ada0-892a03b90405
 
 
-https://github.com/user-attachments/assets/b20afdf2-46d2-480b-876c-11119e8ffd1b
 
+
+https://github.com/user-attachments/assets/b0075bd4-0349-424f-b547-7d96ae09d9dc
 
 
 
