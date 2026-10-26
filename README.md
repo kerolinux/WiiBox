@@ -1,6 +1,9 @@
 # WiiBox — Wii Robotics & Physics Sandbox
 
-WiiBox is a bare-metal C++ homebrew app for the Nintendo Wii that turns the console into a small robotics lab. A differential-drive rover moves through a Box2D physics arena, sensing its surroundings with five raycast distance sensors. A lightweight header-only neural network (5 inputs, 8 hidden neurons, 2 outputs) turns those readings into wheel commands, with no dependencies and no heap allocation. Place a goal flag and the rover plans a route to it, paint your own walls or generate a random maze, drag obstacles around with the Wiimote pointer, or take over manually with the Nunchuk. Everything runs at 60 FPS and is presented in a glossy Wii Sports-inspired interface with a live telemetry menu.
+<p align="center"><img src="docs/cover.png" alt="WiiBox" width="860"></p>
+
+Bare-metal C++ homebrew: Box2D rigid-body arena, a differential-drive rover with 5 raycast
+range sensors, and a header-only 5→8→2 MLP driving the wheels. Rendered with GRRLIB.
 
 ## Layout
 ```
@@ -12,8 +15,10 @@ WiiBox/
 │  └─ weights.h     const weight arrays (hand-designed default; replaceable)
 ├─ tools/
 │  ├─ train_export.py      scikit-learn trainer -> writes source/weights.h
-│  └─ make_nn_diagram.py   draws docs/nn_diagram.svg from weights.h
-├─ docs/nn_diagram.svg
+│  ├─ make_nn_diagram.py   draws docs/nn_diagram.svg from weights.h
+│  └─ make_cover.py        draws the channel icon and banner (needs pillow)
+├─ apps/WiiBox/     Homebrew Channel files (meta.xml, icon.png; boot.dol added by make dist)
+├─ docs/            nn_diagram.svg, cover.png
 └─ box2d/           git submodule (Box2D v2.4.1)
 ```
 
@@ -23,8 +28,8 @@ WiiBox/
 Five raycast distances feed a 5→8→2 tanh network whose two outputs become the left and right wheel commands. Those commands are blended with the path planner when a goal is set, passed through a damping/smoothing shaper, and applied as wheel forces in Box2D. The diagram is generated from `source/weights.h` by `tools/make_nn_diagram.py`.
 
 ## Demo
-
-https://github.com/user-attachments/assets/2aaa76fe-9541-45bd-8380-34f8d56db9f7
+<!-- Replace this line with your video: edit this file on github.com, drag demo.mp4 into the editor, and keep the URL it inserts. -->
+*Demo video coming soon.*
 
 ## Build
 1. Install devkitPro with `wii-dev`, then portlibs: `ppc-freetype ppc-libpng ppc-libjpeg-turbo ppc-bzip2 ppc-zlib`.
@@ -39,6 +44,11 @@ https://github.com/user-attachments/assets/2aaa76fe-9541-45bd-8380-34f8d56db9f7
 
 If Box2D complains about a missing platform timer, `b2Timer` falls back to a stub on unknown
 platforms; if your version doesn't, wrap its body in `#if 0` — the sandbox never uses it.
+
+## Run it on a Wii
+1. `make dist` builds `WiiBox.dol` and copies it to `apps/WiiBox/boot.dol` (next to the included `meta.xml` and `icon.png`).
+2. Copy the whole `apps/WiiBox` folder to `sd:/apps/` (or `usb:/apps/` on a FAT32 drive).
+3. Launch **WiiBox** from the Homebrew Channel. Or skip the card: `export WIILOAD=tcp:<wii-ip> && make run`.
 
 ## Controls
 | Input | Action |

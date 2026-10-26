@@ -20,7 +20,7 @@ CFLAGS   = -g -O3 -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS = $(CFLAGS) -std=gnu++17 -fno-exceptions -fno-rtti
 LDFLAGS  = -g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
-LIBS     := -lgrrlib -lpngu -lfreetype -lbrotlidec -lbrotlicommon -lbz2 -ljpeg -lpng -lz -lfat -lwiiuse -lbte -logc -lm
+LIBS     := -lgrrlib -lfreetype -lbz2 -ljpeg -lpng -lz -lfat -lwiiuse -lbte -logc -lm
 LIBDIRS  := $(PORTLIBS)
 
 #---------------------------------------------------------------------------------
@@ -37,13 +37,13 @@ export LD     := $(CXX)
 export OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o)
 
 export INCLUDE := $(foreach dir,$(INCLUDES),-iquote $(CURDIR)/$(dir)) \
-                  -I$(CURDIR)/box2d/include -I$(CURDIR)/box2d/src \
+                  -I$(CURDIR)/box2d/include \
                   $(foreach dir,$(LIBDIRS),-I$(dir)/include) \
                   -I$(CURDIR)/$(BUILD) -I$(LIBOGC_INC)
 
 export LIBPATHS := -L$(LIBOGC_LIB) $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-.PHONY: $(BUILD) clean run
+.PHONY: $(BUILD) clean run dist
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
@@ -55,6 +55,11 @@ clean:
 
 run:
 	wiiload $(OUTPUT).dol
+
+dist: $(BUILD)
+	@mkdir -p apps/WiiBox
+	@cp $(OUTPUT).dol apps/WiiBox/boot.dol
+	@echo "ready: copy the apps/WiiBox folder to sd:/apps/ (or usb:/apps/)"
 
 #---------------------------------------------------------------------------------
 else
