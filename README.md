@@ -28,8 +28,11 @@ WiiBox/
 Five raycast distances feed a 5→8→2 tanh network whose two outputs become the left and right wheel commands. Those commands are blended with the path planner when a goal is set, passed through a damping/smoothing shaper, and applied as wheel forces in Box2D. The diagram is generated from `source/weights.h` by `tools/make_nn_diagram.py`.
 
 ## Demo
-<!-- Replace this line with your video: edit this file on github.com, drag demo.mp4 into the editor, and keep the URL it inserts. -->
-*Demo video coming soon.*
+
+
+https://github.com/user-attachments/assets/7d7be500-8550-46b7-8943-ef9b9e0719f3
+
+
 
 ## Build
 1. Install devkitPro with `wii-dev`, then portlibs: `ppc-freetype ppc-libpng ppc-libjpeg-turbo ppc-bzip2 ppc-zlib`.
